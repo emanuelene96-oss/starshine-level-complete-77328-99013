@@ -9,9 +9,10 @@ const config: CapacitorConfig = {
     cleartext: true
   },
   plugins: {
-    UnityAds: {
-      unityGameId: 'YOUR_UNITY_GAME_ID', // Replace with your Unity Game ID
-      testMode: true // Set to false in production
+    AdMob: {
+      appId: 'YOUR_ADMOB_APP_ID', // Replace with your AdMob App ID (ca-app-pub-XXXXX~XXXXXX)
+      testingDevices: ['YOUR_TEST_DEVICE_ID'], // Optional: Add test device IDs
+      initializeForTesting: true // Set to false in production
     }
   }
 };

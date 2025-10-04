@@ -5,8 +5,8 @@ import { Card } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { Lightbulb } from "lucide-react";
 import CongratulationsPopup from "./CongratulationsPopup";
-import { useGameSave } from "@/hooks/useGameSave";
-import { useUnityAds } from "@/hooks/useUnityAds";
+// import { useGameSave } from "@/hooks/useGameSave"; // Temporarily disabled
+import { useAdMob } from "@/hooks/useAdMob";
 
 interface GameBoardProps {
   onBackToMenu: () => void;
@@ -37,11 +37,15 @@ export const GameBoard = ({ onBackToMenu, playerName }: GameBoardProps) => {
   const [levelsCompleted, setLevelsCompleted] = useState(0);
   const [completedLevel, setCompletedLevel] = useState(1);
 
-  // Game save hook
-  const { gameSave, saveGameProgress, saveLevelProgress, saveLevelScore } = useGameSave(playerName);
+  // Game save hook - temporarily disabled until types regenerate
+  // const { gameSave, saveGameProgress, saveLevelProgress, saveLevelScore } = useGameSave(playerName);
+  const gameSave = null;
+  const saveGameProgress = async (..._args: any[]) => {};
+  const saveLevelProgress = async (..._args: any[]) => {};
+  const saveLevelScore = async (..._args: any[]) => {};
   
-  // Unity Ads hook
-  const { isInitialized, isAdReady, isAdShowing, showRewardedAd } = useUnityAds();
+  // AdMob hook
+  const { isInitialized, isAdReady, isAdShowing, showRewardedAd } = useAdMob();
 
   // Initialize game
   useEffect(() => {

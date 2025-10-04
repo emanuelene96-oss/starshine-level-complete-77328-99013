@@ -5,14 +5,14 @@ import { Card } from "@/components/ui/card";
 import { Play, Trophy, Target, Zap, RotateCcw } from "lucide-react";
 import { Bottle } from "@/components/Bottle";
 import { PlayerNameDialog } from "@/components/PlayerNameDialog";
-import { useGameSave } from "@/hooks/useGameSave";
+// import { useGameSave } from "@/hooks/useGameSave"; // Temporarily disabled
 
 const Index = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [playerName, setPlayerName] = useState<string>('');
   const [showNameDialog, setShowNameDialog] = useState(false);
 
-  const { gameSave } = useGameSave(playerName);
+  const gameSave = null; // Temporarily disabled
 
   // Load saved player name on component mount
   useEffect(() => {
