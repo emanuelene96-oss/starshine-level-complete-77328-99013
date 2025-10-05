@@ -3,7 +3,7 @@ import { GameBoard } from "@/components/GameBoard";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Play, Trophy, Target, Zap, RotateCcw } from "lucide-react";
-import { Bottle } from "@/components/Bottle";
+import { Shape } from "@/components/Shape";
 import { PlayerNameDialog } from "@/components/PlayerNameDialog";
 // import { useGameSave } from "@/hooks/useGameSave"; // Temporarily disabled
 
@@ -70,17 +70,17 @@ const Index = () => {
             Hidden Match Solver
           </h1>
           <p className="text-muted-foreground text-lg">
-            The Ultimate Bottle Puzzle Challenge
+            The Ultimate Shape Puzzle Challenge
           </p>
         </div>
 
-        {/* Game preview with bottles */}
+        {/* Game preview with shapes */}
         <div className="mb-8">
           <div className="flex justify-center gap-2 mb-4">
-            <Bottle color="red" isSelected={false} onClick={() => {}} disabled />
-            <Bottle color="green" isSelected={false} onClick={() => {}} disabled />
-            <Bottle color="blue" isSelected={false} onClick={() => {}} disabled />
-            <Bottle color="orange" isSelected={false} onClick={() => {}} disabled />
+            <Shape type="square" color="red" isSelected={false} onClick={() => {}} disabled />
+            <Shape type="circle" color="green" isSelected={false} onClick={() => {}} disabled />
+            <Shape type="triangle" color="blue" isSelected={false} onClick={() => {}} disabled />
+            <Shape type="hexagon" color="orange" isSelected={false} onClick={() => {}} disabled />
           </div>
           <p className="text-sm text-muted-foreground">Match the hidden arrangement to progress!</p>
         </div>
@@ -104,14 +104,14 @@ const Index = () => {
         {/* Description */}
         <div className="mb-8 p-4 bg-surface rounded-lg border border-border/30">
           <p className="text-muted-foreground text-sm mb-3">
-            Start with 4 bottles and progress through endless levels. Every 10 levels, the difficulty increases with one more bottle!
+            Start with 4 shapes and progress through endless levels. Every 10 levels, the difficulty increases with one more shape!
           </p>
           <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
             <span>Level 1-10:</span>
-            <span className="text-primary font-semibold">4 bottles</span>
+            <span className="text-primary font-semibold">4 shapes</span>
             <span>→</span>
             <span>Level 11-20:</span>
-            <span className="text-primary font-semibold">5 bottles</span>
+            <span className="text-primary font-semibold">5 shapes</span>
             <span>→ ...</span>
           </div>
         </div>

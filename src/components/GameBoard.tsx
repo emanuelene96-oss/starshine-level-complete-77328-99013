@@ -1,77 +1,51 @@
 import { useState, useEffect } from "react";
-import { Bottle, type BottleColor } from "./Bottle";
+import { Shape, type ShapeType, type ShapeColor } from "./Shape";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { Lightbulb } from "lucide-react";
 import CongratulationsPopup from "./CongratulationsPopup";
-// import { useGameSave } from "@/hooks/useGameSave"; // Temporarily disabled
-import { useAdMob } from "@/hooks/useAdMob";
 
 interface GameBoardProps {
   onBackToMenu: () => void;
   playerName: string;
 }
 
-const AVAILABLE_COLORS: BottleColor[] = ["red", "green", "blue", "orange", "purple", "pink", "teal", "yellow"];
+const AVAILABLE_COLORS: ShapeColor[] = ["red", "green", "blue", "orange", "purple", "pink", "teal", "yellow"];
+const AVAILABLE_SHAPES: ShapeType[] = ["square", "circle", "triangle", "hexagon", "diamond", "star", "heart", "pentagon"];
 
-const getBottleCountForLevel = (level: number): number => {
-  // Start with 4 bottles, increase by 1 every 10 levels, cap at 8
+interface GameShape {
+  type: ShapeType;
+  color: ShapeColor;
+}
+
+const getShapeCountForLevel = (level: number): number => {
+  // Start with 4 shapes, increase by 1 every 10 levels, cap at 8
   return Math.min(8, 4 + Math.floor((level - 1) / 10));
 };
 
 export const GameBoard = ({ onBackToMenu, playerName }: GameBoardProps) => {
   const [level, setLevel] = useState(1);
-  const bottleCount = getBottleCountForLevel(level);
-  const [visible, setVisible] = useState<BottleColor[]>([]);
-  const [target, setTarget] = useState<BottleColor[]>([]);
+  const shapeCount = getShapeCountForLevel(level);
+  const [visible, setVisible] = useState<GameShape[]>([]);
+  const [target, setTarget] = useState<GameShape[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
   const [moveCount, setMoveCount] = useState(0);
   const [matchCount, setMatchCount] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [showCongratulations, setShowCongratulations] = useState(false);
   const [hintsLeft, setHintsLeft] = useState(3);
-  const [showAdPrompt, setShowAdPrompt] = useState(false);
+  const [showHintPrompt, setShowHintPrompt] = useState(false);
   const [totalStars, setTotalStars] = useState(0);
   const [totalMoves, setTotalMoves] = useState(0);
   const [levelsCompleted, setLevelsCompleted] = useState(0);
   const [completedLevel, setCompletedLevel] = useState(1);
-
-  // Game save hook - temporarily disabled until types regenerate
-  // const { gameSave, saveGameProgress, saveLevelProgress, saveLevelScore } = useGameSave(playerName);
-  const gameSave = null;
-  const saveGameProgress = async (..._args: any[]) => {};
-  const saveLevelProgress = async (..._args: any[]) => {};
-  const saveLevelScore = async (..._args: any[]) => {};
-  
-  // AdMob hook
-  const { isInitialized, isAdReady, isAdShowing, showRewardedAd } = useAdMob();
 
   // Initialize game
   useEffect(() => {
     initializeGame();
   }, [level]);
 
-  // Load saved progress
-  useEffect(() => {
-    if (gameSave) {
-      setLevel(gameSave.current_level);
-      setTotalStars(gameSave.total_stars);
-      setTotalMoves(gameSave.total_moves);
-      setLevelsCompleted(gameSave.levels_completed);
-      setHintsLeft(gameSave.hints_remaining ?? 3);
-      
-      // Restore in-progress level if it exists
-      if (gameSave.level_in_progress) {
-        const progress = gameSave.level_in_progress;
-        setVisible(progress.visible as BottleColor[]);
-        setTarget(progress.target as BottleColor[]);
-        setMoveCount(progress.moveCount);
-        setMatchCount(progress.matchCount);
-        setSelected(progress.selected);
-      }
-    }
-  }, [gameSave]);
 
   const shuffle = <T,>(array: T[]): T[] => {
     const shuffled = [...array];
@@ -87,13 +61,22 @@ export const GameBoard = ({ onBackToMenu, playerName }: GameBoardProps) => {
       setLevel(1);
     }
 
-    const colors = AVAILABLE_COLORS.slice(0, bottleCount);
-    const targetArrangement = shuffle(colors);
+    // Randomly select 4 different shapes for this level
+    const selectedShapes = shuffle(AVAILABLE_SHAPES).slice(0, shapeCount);
+    const colors = AVAILABLE_COLORS.slice(0, shapeCount);
+    
+    // Create shape-color pairs
+    const shapes: GameShape[] = selectedShapes.map((type, index) => ({
+      type,
+      color: colors[index]
+    }));
+
+    const targetArrangement = shuffle(shapes);
     let visibleArrangement;
 
     // Ensure the initial arrangement has 0 matches for proper challenge
     do {
-      visibleArrangement = shuffle(colors);
+      visibleArrangement = shuffle([...shapes]);
     } while (countMatches(visibleArrangement, targetArrangement) > 0);
 
     setTarget(targetArrangement);
@@ -105,22 +88,22 @@ export const GameBoard = ({ onBackToMenu, playerName }: GameBoardProps) => {
     setShowCongratulations(false);
   };
 
-  const countMatches = (arr1: BottleColor[], arr2: BottleColor[]): number => {
-    return arr1.reduce((count, color, index) => {
-      return count + (color === arr2[index] ? 1 : 0);
+  const countMatches = (arr1: GameShape[], arr2: GameShape[]): number => {
+    return arr1.reduce((count, shape, index) => {
+      return count + (shape.type === arr2[index].type && shape.color === arr2[index].color ? 1 : 0);
     }, 0);
   };
 
   const calculateStars = () => {
-    // Base target moves: 6 for 4 bottles, +2 for each additional bottle
-    const baseTarget = 6 + (bottleCount - 4) * 2;
+    // Base target moves: 6 for 4 shapes, +2 for each additional shape
+    const baseTarget = 6 + (shapeCount - 4) * 2;
     
     if (moveCount <= baseTarget * 0.6) return 3;
     if (moveCount <= baseTarget) return 2;
     return 1;
   };
 
-  const handleBottleTap = (index: number) => {
+  const handleShapeTap = (index: number) => {
     if (isComplete) return;
 
     if (selected === null) {
@@ -144,12 +127,9 @@ export const GameBoard = ({ onBackToMenu, playerName }: GameBoardProps) => {
 
     const newMatchCount = countMatches(newVisible, target);
     setMatchCount(newMatchCount);
-    
-    // Save level progress after each move
-    saveLevelProgress(newVisible, target, newMoveCount, newMatchCount, null, hintsLeft);
 
     // Check for completion
-    if (newMatchCount === bottleCount) {
+    if (newMatchCount === shapeCount) {
       setIsComplete(true);
       setCompletedLevel(level); // Store the completed level for display
 
@@ -163,18 +143,14 @@ export const GameBoard = ({ onBackToMenu, playerName }: GameBoardProps) => {
       setTotalMoves(newTotalMoves);
       setLevelsCompleted(newLevelsCompleted);
 
-      // Save level score only (don't advance current_level yet) and clear progress
-      saveLevelScore(level, moveCount + 1, stars, bottleCount);
-      saveGameProgress(level, newTotalStars, newTotalMoves, newLevelsCompleted, null, hintsLeft);
-
       // Show congratulations popup after a short delay
       setTimeout(() => {
         setShowCongratulations(true);
       }, 500);
     } else {
       const message = newMatchCount === 0
-        ? "No bottles match"
-        : `${newMatchCount} bottle${newMatchCount > 1 ? 's' : ''} match`;
+        ? "No shapes match"
+        : `${newMatchCount} shape${newMatchCount > 1 ? 's' : ''} match`;
 
       toast({
         title: message,
@@ -187,8 +163,6 @@ export const GameBoard = ({ onBackToMenu, playerName }: GameBoardProps) => {
     const nextLevel = level + 1;
     setLevel(nextLevel);
     setShowCongratulations(false);
-    // Save the new current level when advancing (with no in-progress state)
-    saveGameProgress(nextLevel, totalStars, totalMoves, levelsCompleted, null, hintsLeft);
     initializeGame();
   };
 
@@ -200,24 +174,30 @@ export const GameBoard = ({ onBackToMenu, playerName }: GameBoardProps) => {
     if (isComplete) return;
 
     if (hintsLeft > 0) {
-      // Use a hint - find first bottle that's not in correct position and place it correctly
+      // Use a hint - find first shape that's not in correct position and place it correctly
       const incorrectIndices = visible
-        .map((color, index) => ({ color, index, isCorrect: color === target[index] }))
-        .filter(bottle => !bottle.isCorrect)
-        .map(bottle => bottle.index);
+        .map((shape, index) => ({ 
+          shape, 
+          index, 
+          isCorrect: shape.type === target[index].type && shape.color === target[index].color 
+        }))
+        .filter(item => !item.isCorrect)
+        .map(item => item.index);
 
       if (incorrectIndices.length > 0) {
-        // Find the correct position for the first incorrect bottle
-        const bottleToFix = incorrectIndices[0];
-        const correctColor = target[bottleToFix];
+        // Find the correct position for the first incorrect shape
+        const shapeToFix = incorrectIndices[0];
+        const correctShape = target[shapeToFix];
         
-        // Find where this correct color currently is
-        const currentCorrectIndex = visible.findIndex(color => color === correctColor);
+        // Find where this correct shape currently is
+        const currentCorrectIndex = visible.findIndex(
+          shape => shape.type === correctShape.type && shape.color === correctShape.color
+        );
         
-        if (currentCorrectIndex !== -1 && currentCorrectIndex !== bottleToFix) {
-          // Swap the bottles
+        if (currentCorrectIndex !== -1 && currentCorrectIndex !== shapeToFix) {
+          // Swap the shapes
           const newVisible = [...visible];
-          [newVisible[bottleToFix], newVisible[currentCorrectIndex]] = [newVisible[currentCorrectIndex], newVisible[bottleToFix]];
+          [newVisible[shapeToFix], newVisible[currentCorrectIndex]] = [newVisible[currentCorrectIndex], newVisible[shapeToFix]];
           
           setVisible(newVisible);
           const newMoveCount = moveCount + 1;
@@ -227,11 +207,8 @@ export const GameBoard = ({ onBackToMenu, playerName }: GameBoardProps) => {
           const newMatchCount = countMatches(newVisible, target);
           setMatchCount(newMatchCount);
           
-          // Save level progress after hint
-          saveLevelProgress(newVisible, target, newMoveCount, newMatchCount, null, hintsLeft - 1);
-          
           // Check for completion
-          if (newMatchCount === bottleCount) {
+          if (newMatchCount === shapeCount) {
             setIsComplete(true);
             setCompletedLevel(level); // Store the completed level for display
 
@@ -245,17 +222,13 @@ export const GameBoard = ({ onBackToMenu, playerName }: GameBoardProps) => {
             setTotalMoves(newTotalMoves);
             setLevelsCompleted(newLevelsCompleted);
 
-            // Save level score only (don't advance current_level yet) and clear progress
-            saveLevelScore(level, moveCount + 1, stars, bottleCount);
-            saveGameProgress(level, newTotalStars, newTotalMoves, newLevelsCompleted, null, hintsLeft - 1);
-
             setTimeout(() => {
               setShowCongratulations(true);
             }, 500);
           }
           
           toast({
-            title: "Hint used! One bottle placed correctly",
+            title: "Hint used! One shape placed correctly",
             variant: "default",
           });
         }
@@ -263,24 +236,11 @@ export const GameBoard = ({ onBackToMenu, playerName }: GameBoardProps) => {
       
       setHintsLeft(prev => prev - 1);
     } else {
-      // Show ad prompt
-      setShowAdPrompt(true);
+      // Show hint prompt (no ads, just for future work)
+      setShowHintPrompt(true);
     }
   };
 
-  const handleWatchAd = () => {
-    setShowAdPrompt(false);
-    
-    showRewardedAd(() => {
-      // This callback is called when the ad is completed successfully
-      setHintsLeft(3);
-      toast({
-        title: "Reward Earned!",
-        description: "3 hints have been restored",
-        variant: "default",
-      });
-    });
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-surface p-4 flex flex-col items-center justify-center">
@@ -298,16 +258,16 @@ export const GameBoard = ({ onBackToMenu, playerName }: GameBoardProps) => {
             <h2 className="text-2xl font-bold text-foreground">
               Level {level}
             </h2>
-            <p className="text-muted-foreground">{bottleCount} bottles • Moves: {moveCount}</p>
+            <p className="text-muted-foreground">{shapeCount} shapes • Moves: {moveCount}</p>
           </div>
           <Button
             variant="secondary"
             onClick={handleHint}
             className="px-6 relative"
-            disabled={isComplete || isAdShowing}
+            disabled={isComplete}
           >
             <Lightbulb className="w-4 h-4 mr-2" />
-            {isAdShowing ? "Loading..." : "Hint"}
+            Hint
             {hintsLeft > 0 && (
               <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
                 {hintsLeft}
@@ -319,21 +279,22 @@ export const GameBoard = ({ onBackToMenu, playerName }: GameBoardProps) => {
         {/* Match Counter */}
         <div className="text-center mb-8">
           <div className="text-4xl font-bold text-primary mb-2">
-            {matchCount}/{bottleCount}
+            {matchCount}/{shapeCount}
           </div>
           <p className="text-muted-foreground">
-            {isComplete ? "🎉 All bottles match!" : "Bottles in correct position"}
+            {isComplete ? "🎉 All shapes match!" : "Shapes in correct position"}
           </p>
         </div>
 
         {/* Game Board */}
         <div className="flex flex-wrap justify-center gap-4 mb-8">
-          {visible.map((color, index) => (
-            <Bottle
+          {visible.map((shape, index) => (
+            <Shape
               key={index}
-              color={color}
+              type={shape.type}
+              color={shape.color}
               isSelected={selected === index}
-              onClick={() => handleBottleTap(index)}
+              onClick={() => handleShapeTap(index)}
               disabled={isComplete}
             />
           ))}
@@ -341,7 +302,7 @@ export const GameBoard = ({ onBackToMenu, playerName }: GameBoardProps) => {
 
         {/* Instructions */}
         <div className="text-center text-sm text-muted-foreground">
-          <p>Tap one bottle, then tap another to swap their positions.</p>
+          <p>Tap one shape, then tap another to swap their positions.</p>
           <p>Match the hidden arrangement - only the count is revealed!</p>
         </div>
       </Card>
@@ -352,39 +313,27 @@ export const GameBoard = ({ onBackToMenu, playerName }: GameBoardProps) => {
         stars={calculateStars()}
         moves={moveCount}
         level={completedLevel}
-        bottleCount={bottleCount}
+        bottleCount={shapeCount}
         onNextLevel={handleNextLevel}
         onBackToMenu={onBackToMenu}
         onClose={handleCloseCongratulations}
       />
 
-      {/* Ad Prompt Dialog */}
-      {showAdPrompt && (
+      {/* Hint Prompt Dialog */}
+      {showHintPrompt && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <Card className="p-6 max-w-sm mx-4 bg-surface-elevated shadow-elevated">
             <div className="text-center">
               <Lightbulb className="w-12 h-12 text-primary mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-foreground mb-2">No Hints Left!</h3>
-              <p className="text-muted-foreground mb-4">Watch an ad to get 3 more hints?</p>
-              {!isAdReady && isInitialized && (
-                <p className="text-sm text-muted-foreground mb-4">Loading ad...</p>
-              )}
-              <div className="flex gap-3">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowAdPrompt(false)}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleWatchAd}
-                  className="flex-1 bg-gradient-to-r from-primary to-primary-glow"
-                  disabled={!isAdReady && isInitialized}
-                >
-                  {isAdReady || !isInitialized ? "Watch Ad" : "Loading..."}
-                </Button>
-              </div>
+              <p className="text-muted-foreground mb-4">You've used all your hints for this session.</p>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowHintPrompt(false)}
+                className="w-full"
+              >
+                Close
+              </Button>
             </div>
           </Card>
         </div>
