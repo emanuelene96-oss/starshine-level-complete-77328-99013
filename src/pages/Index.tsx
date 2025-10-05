@@ -66,11 +66,11 @@ const Index = () => {
               <Trophy className="w-8 h-8 text-accent-foreground" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-foreground mb-2 bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-            Hidden Match Solver
+          <h1 className="text-5xl font-bold text-foreground mb-2 bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+            Shapes Match
           </h1>
           <p className="text-muted-foreground text-lg">
-            The Ultimate Shape Puzzle Challenge
+            Match the Hidden Pattern
           </p>
         </div>
 
@@ -103,17 +103,9 @@ const Index = () => {
 
         {/* Description */}
         <div className="mb-8 p-4 bg-surface rounded-lg border border-border/30">
-          <p className="text-muted-foreground text-sm mb-3">
-            Start with 4 shapes and progress through endless levels. Every 10 levels, the difficulty increases with one more shape!
+          <p className="text-muted-foreground text-sm">
+            Test your memory and pattern recognition skills! Match the hidden arrangement of shapes to progress through endless levels. The difficulty increases as you advance.
           </p>
-          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-            <span>Level 1-10:</span>
-            <span className="text-primary font-semibold">4 shapes</span>
-            <span>→</span>
-            <span>Level 11-20:</span>
-            <span className="text-primary font-semibold">5 shapes</span>
-            <span>→ ...</span>
-          </div>
         </div>
 
         {/* Player info and stats */}

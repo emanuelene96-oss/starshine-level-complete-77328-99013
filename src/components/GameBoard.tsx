@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { Lightbulb } from "lucide-react";
 import CongratulationsPopup from "./CongratulationsPopup";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface GameBoardProps {
   onBackToMenu: () => void;
@@ -36,6 +37,7 @@ export const GameBoard = ({ onBackToMenu, playerName }: GameBoardProps) => {
   const [showCongratulations, setShowCongratulations] = useState(false);
   const [hintsLeft, setHintsLeft] = useState(3);
   const [showHintPrompt, setShowHintPrompt] = useState(false);
+  const [showAdPrompt, setShowAdPrompt] = useState(false);
   const [totalStars, setTotalStars] = useState(0);
   const [totalMoves, setTotalMoves] = useState(0);
   const [levelsCompleted, setLevelsCompleted] = useState(0);
@@ -236,8 +238,8 @@ export const GameBoard = ({ onBackToMenu, playerName }: GameBoardProps) => {
       
       setHintsLeft(prev => prev - 1);
     } else {
-      // Show hint prompt (no ads, just for future work)
-      setShowHintPrompt(true);
+      // Show ad prompt to restore hints
+      setShowAdPrompt(true);
     }
   };
 
@@ -319,25 +321,28 @@ export const GameBoard = ({ onBackToMenu, playerName }: GameBoardProps) => {
         onClose={handleCloseCongratulations}
       />
 
-      {/* Hint Prompt Dialog */}
-      {showHintPrompt && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <Card className="p-6 max-w-sm mx-4 bg-surface-elevated shadow-elevated">
-            <div className="text-center">
-              <Lightbulb className="w-12 h-12 text-primary mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">No Hints Left!</h3>
-              <p className="text-muted-foreground mb-4">You've used all your hints for this session.</p>
-              <Button 
-                variant="outline" 
-                onClick={() => setShowHintPrompt(false)}
-                className="w-full"
-              >
-                Close
-              </Button>
-            </div>
-          </Card>
-        </div>
-      )}
+      {/* Watch Ad Prompt */}
+      <AlertDialog open={showAdPrompt} onOpenChange={setShowAdPrompt}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Restore Hints</AlertDialogTitle>
+            <AlertDialogDescription>
+              Watch an ad to restore your hints and continue playing!
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              setShowAdPrompt(false);
+              toast({
+                title: "Ad functionality coming soon!",
+              });
+            }}>
+              Watch Ad
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
